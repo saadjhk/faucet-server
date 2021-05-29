@@ -1,5 +1,5 @@
+require('dotenv').config();
 import express from 'express';
-
 import * as winston from 'winston';
 import * as expressWinston from 'express-winston';
 import cors from 'cors';
@@ -9,16 +9,14 @@ import { JHKToken__factory } from './contracts/factories/JHKToken__factory';
 import { JHKToken } from './contracts/JHKToken';
 
 const app: express.Application = express();
-const port = 7500;
 
-
-const ethersProvider = new ethers.providers.JsonRpcProvider(``);
-const ethersWallet = new ethers.Wallet(``, ethersProvider);
-const jhkToken = JHKToken__factory.connect(`0x18bdb6986a38998f4c4a5b4ac81f13092ea45004`, ethersWallet);
+const ethersProvider = new ethers.providers.JsonRpcProvider(process.env.GETH_URL);
+const ethersWallet = new ethers.Wallet(process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY : ``, ethersProvider);
+const jhkToken = JHKToken__factory.connect(process.env.USDC ? process.env.USDC : ``, ethersWallet);
 
 const supportedTokens = {
     'ETH': {
-        faucetAmount: ethers.utils.parseEther("1.0"),
+        faucetAmount: `0x1312D00`,
         contract: undefined        
     },
     'USDC': {
@@ -92,10 +90,10 @@ app.post('/faucet/:token/:address', async (req, res) => {
 
 
 // this is a simple route to make sure everything is working properly
-const runningMessage = `Server running at http://localhost:${port}`;
+const runningMessage = `Server running at http://localhost:${process.env.PORT}`;
 app.get('/', (req: express.Request, res: express.Response) => {
     res.status(200).send(runningMessage)
 });
 
 
-app.listen(port, () => console.log(runningMessage))
+app.listen(process.env.PORT, () => console.log(runningMessage))
