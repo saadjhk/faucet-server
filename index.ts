@@ -15,6 +15,38 @@ const ethersProvider = new ethers.providers.JsonRpcProvider(process.env.GETH_URL
 const ethersWallet = new ethers.Wallet(process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY : ``, ethersProvider);
 const jhkToken = JHKToken__factory.connect(process.env.USDC ? process.env.USDC : ``, ethersWallet);
 
+
+type SentData = {
+    [tokenName: string]: number;
+};
+
+type SentMemory = {
+    [address: string]: SentData;
+}
+const sentMemory: SentMemory = {};
+
+
+function getLastSentTimeStamp(address: string, tokenName: string): undefined | number {
+    if (sentMemory[address][tokenName]) {
+        return sentMemory[address][tokenName];
+    } else {
+        return undefined;
+    }
+}
+
+function setLastSentTimeStamp(address: string, token: string) {
+    if (sentMemory[address]) {
+        sentMemory[address] = {
+            ... sentMemory[address],
+            [token]: Date.now()
+        } 
+    } else {
+        sentMemory[address] = {
+            [token]: Date.now()
+        }
+    }
+}
+
 // here we are adding middleware to allow cross-origin requests
 app.use(cors({
     origin: '*',
@@ -43,11 +75,11 @@ function getContract(tokenName: string): { contract: JHKToken, faucetAmount: str
     }
 }
 
-const limiter = rateLimit({
-    windowMs: 24 * 60 * 60 * 1000, // 1 day
-    max: 2
-});
-app.use(limiter);
+// const limiter = rateLimit({
+//     windowMs: 24 * 60 * 60 * 1000
+//     max: 2
+// });
+// app.use(limiter);
 
 // here we are adding middleware to parse all incoming requests as JSON 
 app.use(express.json());
@@ -75,28 +107,34 @@ app.use(expressWinston.logger(loggerOptions));
 
 
 app.post('/faucet/:token/:address', async (req, res) => {
-    if(req.params.token in supportedTokens) {
-        if (req.params.address && /^0x[a-fA-F0-9]{40}$/.test(req.params.address)) {
-            if (req.params.token === 'ETH') {
-                let tx = await ethersWallet.sendTransaction({
-                    to: req.params.address,
-                    value: ethers.utils.parseEther("1.0")
-                });
-                res.send(`Sent ${1.0} ${req.params.token} TX hash: ${tx.hash}.`);
-            } else {
-                let token = getContract(req.params.token);
-                if (token) {
-                    await token.contract.transfer(req.params.address, token.faucetAmount);
-                    res.send(`Sent ${20} ${req.params.token}.`);
+    const lastSent = getLastSentTimeStamp(req.params.address, req.params.token);
+    if (lastSent && lastSent <= Date.now() - 24 * 60 * 60 * 1000) {
+        setLastSentTimeStamp(req.params.address, req.params.token);
+        if (req.params.token in supportedTokens) {
+            if (req.params.address && /^0x[a-fA-F0-9]{40}$/.test(req.params.address)) {
+                if (req.params.token === 'ETH') {
+                    let tx = await ethersWallet.sendTransaction({
+                        to: req.params.address,
+                        value: ethers.utils.parseEther("1.0")
+                    });
+                    res.send(`Sent ${1.0} ${req.params.token} TX hash: ${tx.hash}.`);
                 } else {
-                    res.send(`Unsupported token ${req.params.token}.`);
+                    let token = getContract(req.params.token);
+                    if (token) {
+                        await token.contract.transfer(req.params.address, token.faucetAmount);
+                        res.send(`Sent ${20} ${req.params.token}.`);
+                    } else {
+                        res.send(`Unsupported token ${req.params.token}.`);
+                    }
                 }
+            } else {
+                res.send(`Invalid address`);
             }
         } else {
-            res.send(`Invalid address`);
+            res.send(`Unsupported token ${req.params.token}.`);
         }
     } else {
-        res.send(`Unsupported token ${req.params.token}.`);
+        res.send(`Have already recieved tokens in last 24`);
     }
 });
 
