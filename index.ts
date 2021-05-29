@@ -113,16 +113,25 @@ app.post('/faucet/:token/:address', async (req, res) => {
         if (req.params.token in supportedTokens) {
             if (req.params.address && /^0x[a-fA-F0-9]{40}$/.test(req.params.address)) {
                 if (req.params.token === 'ETH') {
-                    let tx = await ethersWallet.sendTransaction({
-                        to: req.params.address,
-                        value: ethers.utils.parseEther("1.0")
-                    });
-                    res.send(`Sent ${1.0} ${req.params.token} TX hash: ${tx.hash}.`);
+                    try {
+                        let tx = await ethersWallet.sendTransaction({
+                            to: req.params.address,
+                            value: ethers.utils.parseEther("1.0")
+                        });
+                        res.send(`Sent ${1.0} ${req.params.token} TX hash: ${tx.hash}.`);
+                    } catch (err) {
+                        res.send(err.message);
+                    }
                 } else {
                     let token = getContract(req.params.token);
                     if (token) {
-                        await token.contract.transfer(req.params.address, token.faucetAmount);
-                        res.send(`Sent ${20} ${req.params.token}.`);
+                        try {
+                            await token.contract.transfer(req.params.address, token.faucetAmount);
+                            res.send(`Sent ${20} ${req.params.token}.`);
+                        } catch (err) {
+                            res.send(err.message);
+                        }
+
                     } else {
                         res.send(`Unsupported token ${req.params.token}.`);
                     }
