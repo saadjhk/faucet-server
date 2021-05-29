@@ -84,7 +84,7 @@ app.post('/faucet/:token/:address', async (req, res) => {
             res.send(`Invalid address`);
         }
     } else {
-        res.send(`Error`);
+        res.send(`Unsupported token ${req.params.token}.`);
     }
 });
 
