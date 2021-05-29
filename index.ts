@@ -5,6 +5,7 @@ import * as expressWinston from 'express-winston';
 import cors from 'cors';
 
 import { ethers } from 'ethers';
+import rateLimit from "express-rate-limit";
 import { JHKToken__factory } from './contracts/factories/JHKToken__factory';
 import { JHKToken } from './contracts/JHKToken';
 
@@ -33,6 +34,12 @@ function getContract(tokenName: string): { contract: JHKToken, faucetAmount: str
             return undefined;
     }
 }
+
+const limiter = rateLimit({
+    windowMs: 24 * 60 * 60 * 1000, // 1 day
+    max: 2
+});
+app.use(limiter);
 
 // here we are adding middleware to parse all incoming requests as JSON 
 app.use(express.json());
