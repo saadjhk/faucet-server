@@ -12,7 +12,7 @@ const app: express.Application = express();
 const port = 7500;
 
 
-const ethersProvider = new ethers.providers.JsonRpcProvider(`https://dev-geth.dtrade.org/`);
+const ethersProvider = new ethers.providers.JsonRpcProvider(``);
 const ethersWallet = new ethers.Wallet(``, ethersProvider);
 const jhkToken = JHKToken__factory.connect(`0x18bdb6986a38998f4c4a5b4ac81f13092ea45004`, ethersWallet);
 
