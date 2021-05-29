@@ -143,7 +143,7 @@ app.post('/faucet/:token/:address', async (req, res) => {
             res.send(`Unsupported token ${req.params.token}.`);
         }
     } else {
-        res.send(`Have already recieved tokens in last 24`);
+        res.send(`Have already recieved tokens in last 24 hours.`);
     }
 });
 
