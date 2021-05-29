@@ -27,7 +27,7 @@ const sentMemory: SentMemory = {};
 
 
 function getLastSentTimeStamp(address: string, tokenName: string): undefined | number {
-    if (sentMemory[address][tokenName]) {
+    if (sentMemory[address] && sentMemory[address][tokenName]) {
         return sentMemory[address][tokenName];
     } else {
         return undefined;
