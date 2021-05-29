@@ -45,7 +45,12 @@ app.use(limiter);
 app.use(express.json());
 
 // here we are adding middleware to allow cross-origin requests
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    methods: ['POST','OPTIONS'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'X-Access-Token'],
+    credentials: true
+}));
 
 // here we are preparing the expressWinston logging middleware configuration,
 // which will automatically log all HTTP requests handled by Express.js
