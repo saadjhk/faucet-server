@@ -108,7 +108,7 @@ app.use(expressWinston.logger(loggerOptions));
 
 app.post('/faucet/:token/:address', async (req, res) => {
     const lastSent = getLastSentTimeStamp(req.params.address, req.params.token);
-    if (lastSent && lastSent <= Date.now() - 24 * 60 * 60 * 1000) {
+    if (!lastSent || lastSent <= Date.now() - 24 * 60 * 60 * 1000) {
         setLastSentTimeStamp(req.params.address, req.params.token);
         if (req.params.token in supportedTokens) {
             if (req.params.address && /^0x[a-fA-F0-9]{40}$/.test(req.params.address)) {
