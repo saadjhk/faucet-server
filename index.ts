@@ -25,10 +25,10 @@ const supportedTokens = {
     }
 };
 
-function getContract(tokenName: string): JHKToken | undefined {
+function getContract(tokenName: string): { contract: JHKToken, faucetAmount: string } | undefined {
     switch(tokenName) {
         case 'USDC':
-            return supportedTokens.USDC.contract;
+            return supportedTokens.USDC;
         default:
             return undefined;
     }
@@ -72,9 +72,9 @@ app.post('/faucet/:token/:address', async (req, res) => {
                 });
                 res.send(`Sent ${1.0} ${req.params.token} TX hash: ${tx.hash}.`);
             } else {
-                let contract = getContract(req.params.token);
-                if (contract) {
-                    await contract.transfer(req.params.address, '20000000');
+                let token = getContract(req.params.token);
+                if (token) {
+                    await token.contract.transfer(req.params.address, token.faucetAmount);
                     res.send(`Sent ${20} ${req.params.token}.`);
                 } else {
                     res.send(`Unsupported token ${req.params.token}.`);
