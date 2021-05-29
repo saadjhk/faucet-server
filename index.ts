@@ -15,6 +15,14 @@ const ethersProvider = new ethers.providers.JsonRpcProvider(process.env.GETH_URL
 const ethersWallet = new ethers.Wallet(process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY : ``, ethersProvider);
 const jhkToken = JHKToken__factory.connect(process.env.USDC ? process.env.USDC : ``, ethersWallet);
 
+// here we are adding middleware to allow cross-origin requests
+app.use(cors({
+    origin: '*',
+    methods: ['POST','OPTIONS'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'X-Access-Token'],
+    credentials: true
+}));
+
 const supportedTokens = {
     'ETH': {
         faucetAmount: `0x1312D00`,
@@ -43,14 +51,6 @@ app.use(limiter);
 
 // here we are adding middleware to parse all incoming requests as JSON 
 app.use(express.json());
-
-// here we are adding middleware to allow cross-origin requests
-app.use(cors({
-    origin: '*',
-    methods: ['POST','OPTIONS'],
-    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'X-Access-Token'],
-    credentials: true
-}));
 
 // here we are preparing the expressWinston logging middleware configuration,
 // which will automatically log all HTTP requests handled by Express.js
