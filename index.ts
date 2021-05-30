@@ -47,6 +47,16 @@ function setLastSentTimeStamp(address: string, token: string) {
     }
 }
 
+setInterval(() => {
+    for (const address in sentMemory) {
+        for (const token in sentMemory[address]) {
+            if (sentMemory[address][token] <= Date.now() - 24 * 60 * 60 * 1000) {
+                delete (sentMemory[address][token]);
+            }
+        }
+    }
+}, 1000 * 60 * 60 * 24);
+
 // here we are adding middleware to allow cross-origin requests
 app.use(cors({
     origin: '*',
