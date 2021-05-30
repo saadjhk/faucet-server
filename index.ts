@@ -12,8 +12,8 @@ import { JHKToken } from './contracts/JHKToken';
 const app: express.Application = express();
 
 const ethersProvider = new ethers.providers.JsonRpcProvider(process.env.GETH_URL);
-const edgProvider = new ethers.providers.JsonRpcProvider(process.env.GETH_URL);
-const edgWallet = new ethers.Wallet(process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY : ``, ethersProvider);
+const edgProvider = new ethers.providers.JsonRpcProvider(process.env.EDG_URL);
+const edgWallet = new ethers.Wallet(process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY : ``, edgProvider);
 const ethersWallet = new ethers.Wallet(process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY : ``, ethersProvider);
 const jhkToken = JHKToken__factory.connect(process.env.USDC ? process.env.USDC : ``, ethersWallet);
 
