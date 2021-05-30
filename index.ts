@@ -86,7 +86,7 @@ async function sentNativeTokens(tokenName: string, address: string) {
     try {
         let wallet = tokenName === 'ETH' ? ethersWallet : tokenName === 'EDG' ? edgWallet : undefined;
         if (wallet) {
-            let tx = await ethersWallet.sendTransaction({
+            let tx = await wallet.sendTransaction({
                 to: address,
                 value: ethers.utils.parseEther("1.0")
             });
