@@ -12,6 +12,8 @@ import { JHKToken } from './contracts/JHKToken';
 const app: express.Application = express();
 
 const ethersProvider = new ethers.providers.JsonRpcProvider(process.env.GETH_URL);
+const edgProvider = new ethers.providers.JsonRpcProvider(process.env.GETH_URL);
+const edgWallet = new ethers.Wallet(process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY : ``, ethersProvider);
 const ethersWallet = new ethers.Wallet(process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY : ``, ethersProvider);
 const jhkToken = JHKToken__factory.connect(process.env.USDC ? process.env.USDC : ``, ethersWallet);
 
@@ -73,8 +75,29 @@ const supportedTokens = {
     'USDC': {
         faucetAmount: `0x1312D00`,
         contract: jhkToken
+    },
+    'EDG':{
+        faucetAmount: ethers.utils.parseEther("1.0"),
+        contract: undefined
     }
 };
+
+async function sentNativeTokens(tokenName: string, address: string) {
+    try {
+        let wallet = tokenName === 'ETH' ? ethersWallet : tokenName === 'EDG' ? edgWallet : undefined;
+        if (wallet) {
+            let tx = await ethersWallet.sendTransaction({
+                to: address,
+                value: ethers.utils.parseEther("1.0")
+            });
+            return (`Sent ${1.0} ${tokenName} TX hash: ${tx.hash}.`);
+        } else {
+            return `Token unsupported.`;
+        }
+    } catch (err) {
+        return err.message;
+    }
+}
 
 function getContract(tokenName: string): { contract: JHKToken, faucetAmount: string } | undefined {
     switch(tokenName) {
@@ -122,16 +145,9 @@ app.post('/faucet/:token/:address', async (req, res) => {
         setLastSentTimeStamp(req.params.address, req.params.token);
         if (req.params.token in supportedTokens) {
             if (req.params.address && /^0x[a-fA-F0-9]{40}$/.test(req.params.address)) {
-                if (req.params.token === 'ETH') {
-                    try {
-                        let tx = await ethersWallet.sendTransaction({
-                            to: req.params.address,
-                            value: ethers.utils.parseEther("1.0")
-                        });
-                        res.send(`Sent ${1.0} ${req.params.token} TX hash: ${tx.hash}.`);
-                    } catch (err) {
-                        res.send(err.message);
-                    }
+                if (['ETH', 'EDG'].includes(req.params.token)) {
+                    let mes = await sentNativeTokens(req.params.token, req.params.address);
+                    res.send(mes);
                 } else {
                     let token = getContract(req.params.token);
                     if (token) {
