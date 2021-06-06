@@ -8,6 +8,7 @@ import { ethers } from 'ethers';
 import rateLimit from "express-rate-limit";
 import { JHKToken__factory } from './contracts/factories/JHKToken__factory';
 import { JHKToken } from './contracts/JHKToken';
+import { BigNumber } from 'ethers/utils';
 
 const app: express.Application = express();
 
@@ -67,7 +68,14 @@ app.use(cors({
     credentials: true
 }));
 
-const supportedTokens = {
+type SupportedTokens = {
+    [key: string]: {
+        faucetAmount: BigNumber | string;
+        contract: undefined | JHKToken
+    }
+}
+
+const supportedTokens: SupportedTokens = {
     'ETH': {
         faucetAmount: ethers.utils.parseEther("5.0"),
         contract: undefined        
@@ -99,7 +107,7 @@ async function sentNativeTokens(tokenName: 'ETH' | 'EDG', address: string) {
     }
 }
 
-function getContract(tokenName: string): { contract: JHKToken, faucetAmount: string } | undefined {
+function getContract(tokenName: string): { contract: JHKToken | undefined, faucetAmount: string | BigNumber } | undefined {
     switch(tokenName) {
         case 'USDC':
             return supportedTokens.USDC;
@@ -150,10 +158,10 @@ app.post('/faucet/:token/:address', async (req, res) => {
                     res.send(mes);
                 } else {
                     let token = getContract(req.params.token);
-                    if (token) {
+                    if (token && token.contract) {
                         try {
                             await token.contract.transfer(req.params.address, token.faucetAmount);
-                            res.send(`Sent ${20} ${req.params.token}.`);
+                            res.send(`Sent ${token.faucetAmount} ${req.params.token}.`);
                         } catch (err) {
                             res.send(err.message);
                         }
