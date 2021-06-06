@@ -90,7 +90,7 @@ async function sentNativeTokens(tokenName: 'ETH' | 'EDG', address: string) {
                 to: address,
                 value: supportedTokens[tokenName].faucetAmount
             });
-            return (`Sent ${1.0} ${tokenName} TX hash: ${tx.hash}.`);
+            return (`Sent ${supportedTokens[tokenName].faucetAmount} ${tokenName} TX hash: ${tx.hash}.`);
         } else {
             return `Token unsupported.`;
         }
