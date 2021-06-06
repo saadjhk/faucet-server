@@ -69,26 +69,26 @@ app.use(cors({
 
 const supportedTokens = {
     'ETH': {
-        faucetAmount: `0x1312D00`,
+        faucetAmount: ethers.utils.parseEther("5.0"),
         contract: undefined        
     },
     'USDC': {
-        faucetAmount: `0x1312D00`,
+        faucetAmount: `0x25AF080`,
         contract: jhkToken
     },
     'EDG':{
-        faucetAmount: ethers.utils.parseEther("1.0"),
+        faucetAmount: ethers.utils.parseEther("5.0"),
         contract: undefined
     }
 };
 
-async function sentNativeTokens(tokenName: string, address: string) {
+async function sentNativeTokens(tokenName: 'ETH' | 'EDG', address: string) {
     try {
         let wallet = tokenName === 'ETH' ? ethersWallet : tokenName === 'EDG' ? edgWallet : undefined;
         if (wallet) {
             let tx = await wallet.sendTransaction({
                 to: address,
-                value: ethers.utils.parseEther("1.0")
+                value: supportedTokens[tokenName].faucetAmount
             });
             return (`Sent ${1.0} ${tokenName} TX hash: ${tx.hash}.`);
         } else {
@@ -146,7 +146,7 @@ app.post('/faucet/:token/:address', async (req, res) => {
         if (req.params.token in supportedTokens) {
             if (req.params.address && /^0x[a-fA-F0-9]{40}$/.test(req.params.address)) {
                 if (['ETH', 'EDG'].includes(req.params.token)) {
-                    let mes = await sentNativeTokens(req.params.token, req.params.address);
+                    let mes = await sentNativeTokens(req.params.token as any, req.params.address);
                     res.send(mes);
                 } else {
                     let token = getContract(req.params.token);
